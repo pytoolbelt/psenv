@@ -3,175 +3,139 @@
 // */
 package cmd
 
-//
-//import (
-//	"fmt"
-//	"github.com/spf13/viper"
-//	"os"
-//	"sync"
-//
-//	"github.com/pytoolbelt/psenv/internal/config"
-//	"github.com/pytoolbelt/psenv/internal/paramstore"
-//	"github.com/spf13/cobra"
-//)
-//
-//// getCmd represents the get command
-//var getCmd = &cobra.Command{
-//	Use:   "get",
-//	Short: "Get parameters from the AWS Parameter Store",
-//	Long:  ``,
-//	Run:   getEntryPoint,
-//}
-//
-//func getEntryPoint(cmd *cobra.Command, args []string) {
-//	var wg sync.WaitGroup
-//
-//	projectConfig, err := config.InitAndLoadProjectConfig()
-//
-//	if err != nil {
-//		fmt.Printf("Error loading project config %s\n", err)
-//		os.Exit(1)
-//	}
-//
-//	basePath := projectConfig.GetBasePath()
-//
-//	ps, err := paramstore.NewParamStore(basePath)
-//	if err != nil {
-//		fmt.Printf("Error creating ssm paramstore %s\n", err)
-//		os.Exit(1)
-//	}
-//
-//	remoteParameterDescriptions, err := ps.DescribeParameters()
-//	if err != nil {
-//		fmt.Printf("Error describing parameters %s\n", err)
-//		os.Exit(1)
-//	}
-//
-//	remoteParameterDescriptions = config.RemoveVarNameFromPaths(remoteParameterDescriptions)
-//	remoteParameterDescriptions = paramstore.SplitAndDeduplicatePaths(remoteParameterDescriptions)
-//
-//	var environments []*config.Environment
-//
-//	for _, p := range remoteParameterDescriptions {
-//		environments = append(environments, config.NewEnvironmentFromPath(p))
-//	}
-//
-//	envChan := make(chan config.Environment, len(environments))
-//	resultChan := make(chan config.Environment, len(environments))
-//
-//	// put env on the channel
-//	for _, env := range environments {
-//		envChan <- *env
-//	}
-//	close(envChan)
-//
-//	// Start worker Go routines
-//	for i := 0; i <= 3; i++ { // Number of workers
-//		wg.Add(1)
-//		go getWorker(envChan, resultChan, &wg)
-//	}
-//
-//	wg.Wait()
-//	close(resultChan)
-//
-//	var cfg *config.Config
-//
-//	cfg, err = config.InitAndLoad()
-//	if err != nil {
-//		// if the config does not exist, create a new template file
-//		cfg, err = config.CreateNewSecretsConfigFile()
-//		if err != nil {
-//			fmt.Printf("Error creating new config file %s\n", err)
-//			os.Exit(1)
-//		}
-//	}
-//
-//	cfg.ClearEnvironments()
-//	for env := range resultChan {
-//		cfg.SetEnvironment(&env)
-//	}
-//
-//	err = viper.WriteConfig()
-//	if err != nil {
-//		fmt.Printf("Error saving config file %s\n", err)
-//		os.Exit(1)
-//	}
-//	os.Exit(0)
-//}
-//
-//func getWorker(envChan <-chan config.Environment, resultChan chan<- config.Environment, wg *sync.WaitGroup) {
-//	defer wg.Done()
-//
-//	for env := range envChan {
-//		psPath := env.GetParamStorePath()
-//		ps, err := paramstore.NewParamStore(psPath)
-//
-//		if err != nil {
-//			fmt.Printf("Error creating ssm paramstore %s\n", err)
-//			continue
-//		}
-//
-//		newParams, err := ps.GetParameters(decryptFlag)
-//		if err != nil {
-//			fmt.Printf("Error getting parameters %s\n", err)
-//			continue
-//		}
-//
-//		env.Params = newParams
-//		resultChan <- env
-//	}
-//}
-//
-//func entrypoint(cmd *cobra.Command, args []string) {
-//	cfg, err := config.InitAndLoad()
-//	HandelError(err)
-//
-//	basePath := cfg.GetBasePath()
-//
-//	ps, err := paramstore.NewParamStore(basePath)
-//	HandelError(err)
-//
-//	params, err := ps.DescribeParameters()
-//	HandelError(err)
-//
-//	if len(params) == 0 {
-//		for k := range cfg.Environments {
-//			e, er := cfg.GetEnvironment(k)
-//			HandelError(er)
-//			e.Params = nil
-//			cfg.SetEnvironment(e)
-//		}
-//		err = cfg.Save()
-//		HandelError(err)
-//		os.Exit(0)
-//	}
-//
-//	params = paramstore.SplitAndDeduplicatePaths(params)
-//
-//	for _, p := range params {
-//		ps, err = paramstore.NewParamStore(p)
-//		HandelError(err)
-//
-//		newParams, err := ps.GetParameters(decryptFlag)
-//		HandelError(err)
-//
-//		newEnvName, err := paramstore.GetEnvNameFromSSMPath(p)
-//		HandelError(err)
-//
-//		env := &config.Environment{
-//			Name:    newEnvName,
-//			Project: cfg.Project,
-//			Prefix:  cfg.Prefix,
-//			Params:  newParams,
-//		}
-//
-//		cfg.SetEnvironment(env)
-//	}
-//	err = cfg.Save()
-//	HandelError(err)
-//	os.Exit(0)
-//}
-//
-//func init() {
-//	rootCmd.AddCommand(getCmd)
-//}
+import (
+	"fmt"
+	"github.com/pytoolbelt/psenv/internal/config"
+	"github.com/pytoolbelt/psenv/internal/parameterstore"
+	"github.com/spf13/cobra"
+	"os"
+	"sync"
+)
+
+func getEntryPoint(cmd *cobra.Command, args []string) {
+	var envChan = make(chan string, 10)
+	var paramsChan = make(chan map[string]string, 25)
+	var errorChan = make(chan error, 10)
+	var wg sync.WaitGroup
+	var numberOfWorkers int = 1
+	var environmentsToGet []string
+	var secretsConfig *config.SecretsConfig
+
+	fmt.Println("getting parameters from the parameter store")
+
+	projectConfig, err := config.LoadProjectConfig()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	secretsConfig, err = config.LoadSecretsConfig()
+	if err != nil {
+		secretsConfig, err = config.CreateNewSecretsConfigFile()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+
+	if envName == "" {
+		numberOfWorkers = len(projectConfig.Environments)
+	}
+
+	if numberOfWorkers == 0 {
+		fmt.Println("no environments found in the psenv-project.yml file")
+		os.Exit(1)
+	}
+
+	// start the workers to put the parameters
+	for i := 0; i < numberOfWorkers; i++ {
+		wg.Add(1)
+		go mainGetWorker(envChan, errorChan, paramsChan, &wg, projectConfig)
+	}
+
+	// put the configured paths on the channel. These will be used
+	// by the parameter store to get params by path.
+	if envName != "" {
+		environmentsToGet = append(environmentsToGet, envName)
+	} else {
+		for _, env := range projectConfig.Environments {
+			environmentsToGet = append(environmentsToGet, env)
+		}
+	}
+
+	// put the environments on the channel
+	for _, env := range environmentsToGet {
+		envChan <- env
+	}
+
+	// close the channel so the workers know when they are done
+	close(envChan)
+
+	// wait for the workers to finish
+	wg.Wait()
+
+	// close the error channel and check for errors
+	close(errorChan)
+	for err := range errorChan {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	// close the params channel
+	close(paramsChan)
+
+	// clear all the environments from the secrets file
+	secretsConfig.ClearEnvironments()
+
+	// get the params and update the secrets file
+	for params := range paramsChan {
+		err = secretsConfig.UpdateSecretsConfigFromParameters(params)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+	}
+
+	// save the secrets file
+	err = secretsConfig.Save()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
+func mainGetWorker(envChan <-chan string, errorChan chan<- error, paramsChan chan<- map[string]string, wg *sync.WaitGroup, projectConfig *config.ProjectConfig) {
+	defer wg.Done()
+
+	// get the parameter store. If we can't make one for some reason,
+	// just exit as there is nothing to do.
+	ps, err := parameterstore.New()
+	if err != nil {
+		errorChan <- err
+		return
+	}
+
+	for env := range envChan {
+		// get the parameters for a given environment path
+		path := projectConfig.GetEnvironmentPath(env)
+		remoteParams, err := ps.GetParameters(path, decryptFlag)
+		if err != nil {
+			errorChan <- err
+			return
+		}
+		paramsChan <- remoteParams
+	}
+}
+
+// getCmd represents the get command
+var getCmd = &cobra.Command{
+	Use:   "get",
+	Short: "Get parameters from the AWS Parameter Store",
+	Long:  ``,
+	Run:   getEntryPoint,
+}
+
+func init() {
+	rootCmd.AddCommand(getCmd)
+}

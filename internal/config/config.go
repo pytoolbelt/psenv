@@ -88,6 +88,11 @@ func (c *SecretsConfig) UpdateSecretsConfigFromParameters(params map[string]stri
 
 		env := parts[len(parts)-2]
 		key := strings.ToUpper(parts[len(parts)-1])
+		prefix := strings.Join(parts[0:len(parts)-3], "/")
+		project := parts[len(parts)-3]
+
+		c.Prefix = prefix
+		c.Project = project
 		if _, ok := c.Environments[env]; !ok {
 			c.Environments[env] = make(map[string]string)
 		}
@@ -161,6 +166,36 @@ func CreateNewProjectConfigFile() (*ProjectConfig, error) {
 	}
 
 	err = os.WriteFile(ProjectConfigFile, data, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	return &templateData, nil
+}
+
+// Create a new psenv-secrets.yml file with template values
+func CreateNewSecretsConfigFile() (*SecretsConfig, error) {
+	templateData := SecretsConfig{
+		Project: "foobar",
+		Prefix:  "/path/to/params",
+		Environments: map[string]map[string]string{
+			"dev": {
+				"KEY1": "value1",
+				"KEY2": "value2",
+			},
+			"prod": {
+				"KEY1": "value1",
+				"KEY2": "value2",
+			},
+		},
+	}
+
+	data, err := yaml.Marshal(&templateData)
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.WriteFile(SecretsConfigFile, data, 0644)
 	if err != nil {
 		return nil, err
 	}
