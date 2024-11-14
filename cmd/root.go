@@ -4,7 +4,6 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -21,13 +20,6 @@ var rootCmd = &cobra.Command{
 	Long:  ``,
 }
 
-func HandelError(err error) {
-	if err != nil {
-		fmt.Printf("Error: %s\n", err)
-		os.Exit(1)
-	}
-}
-
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -38,6 +30,6 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&envName, "env", "e", "all", "Environment name")
+	rootCmd.PersistentFlags().StringVarP(&envName, "env", "e", "", "Environment name")
 	rootCmd.PersistentFlags().BoolVarP(&decryptFlag, "decrypt", "d", false, "Decrypt secure strings")
 }

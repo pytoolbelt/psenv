@@ -18,7 +18,7 @@ func configEntrypoint(cmd *cobra.Command, args []string) {
 	validateConfigFlags()
 
 	if printFlag {
-		projectConfig, err := config.InitAndLoadProjectConfig()
+		projectConfig, err := config.LoadProjectConfig()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -37,15 +37,15 @@ func configEntrypoint(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	if newSecretsFlag {
-		_, err := config.CreateNewSecretsConfigFile()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
-		fmt.Println("Created new secrets file psenv-secrets.yml")
-		os.Exit(0)
-	}
+	//if newSecretsFlag {
+	//	_, err := config.CreateNewSecretsConfigFile()
+	//	if err != nil {
+	//		fmt.Println(err)
+	//		os.Exit(1)
+	//	}
+	//	fmt.Println("Created new secrets file psenv-secrets.yml")
+	//	os.Exit(0)
+	//}
 }
 
 func validateConfigFlags() {
