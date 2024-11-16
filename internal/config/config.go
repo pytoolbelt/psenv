@@ -47,6 +47,10 @@ func (c *ProjectConfig) GetBasePath() string {
 	return fmt.Sprintf("%s/%s/", c.Prefix, c.Project)
 }
 
+func (c *ProjectConfig) HasEnvironment(env string) bool {
+	return slices.Contains(c.Environments, env)
+}
+
 // *************** Secrets Config ***************
 
 type SecretsConfig struct {

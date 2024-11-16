@@ -1,5 +1,7 @@
 package utils
 
+import "strings"
+
 type Parameters struct {
 	ToAdd    map[string]string
 	ToUpdate map[string]string
@@ -37,4 +39,13 @@ func MergeLocalAndRemoteParams(localParams, remoteParams map[string]string) *Par
 	}
 
 	return toMerge
+}
+
+func ConvertParamsToEnvVars(params map[string]string) []string {
+	var envVars []string
+	for k, v := range params {
+		parts := strings.Split(k, "/")
+		envVars = append(envVars, parts[len(parts)-1]+"="+v)
+	}
+	return envVars
 }

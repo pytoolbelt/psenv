@@ -56,7 +56,7 @@ func getWorker(envChan <-chan string, wg *sync.WaitGroup, paramsChan chan<- map[
 	for env := range envChan {
 		// get the parameters for a given environment path
 		path := secretsConfig.GetEnvironmentPath(env)
-		remoteParams, err := ps.GetParameters(path, decryptFlag)
+		remoteParams, err := ps.GetParameters(path, false)
 		if err != nil {
 			fmt.Println(err)
 			continue

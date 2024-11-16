@@ -11,7 +11,6 @@ import (
 
 // flags for config command
 var envName string
-var decryptFlag bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -31,5 +30,4 @@ func Execute() {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&envName, "env", "e", "", "Environment name")
-	rootCmd.PersistentFlags().BoolVarP(&decryptFlag, "decrypt", "d", false, "Decrypt secure strings")
 }

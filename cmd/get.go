@@ -50,7 +50,7 @@ func getEntryPoint(cmd *cobra.Command, args []string) {
 	// start the workers to put the parameters
 	for i := 0; i < numberOfWorkers; i++ {
 		wg.Add(1)
-		go mainGetWorker(envChan, errorChan, paramsChan, &wg, projectConfig)
+		go mainGetWorker(envChan, errorChan, paramsChan, &wg, projectConfig, getCommandDecryptFlag)
 	}
 
 	// put the configured paths on the channel. These will be used
@@ -105,7 +105,7 @@ func getEntryPoint(cmd *cobra.Command, args []string) {
 	os.Exit(0)
 }
 
-func mainGetWorker(envChan <-chan string, errorChan chan<- error, paramsChan chan<- map[string]string, wg *sync.WaitGroup, projectConfig *config.ProjectConfig) {
+func mainGetWorker(envChan <-chan string, errorChan chan<- error, paramsChan chan<- map[string]string, wg *sync.WaitGroup, projectConfig *config.ProjectConfig, decrypt bool) {
 	defer wg.Done()
 
 	// get the parameter store. If we can't make one for some reason,
@@ -119,7 +119,7 @@ func mainGetWorker(envChan <-chan string, errorChan chan<- error, paramsChan cha
 	for env := range envChan {
 		// get the parameters for a given environment path
 		path := projectConfig.GetEnvironmentPath(env)
-		remoteParams, err := ps.GetParameters(path, decryptFlag)
+		remoteParams, err := ps.GetParameters(path, decrypt)
 		if err != nil {
 			errorChan <- err
 			return
@@ -127,6 +127,8 @@ func mainGetWorker(envChan <-chan string, errorChan chan<- error, paramsChan cha
 		paramsChan <- remoteParams
 	}
 }
+
+var getCommandDecryptFlag bool
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
@@ -138,4 +140,5 @@ var getCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(getCmd)
+	getCmd.Flags().BoolVarP(&getCommandDecryptFlag, "decrypt", "d", false, "Decrypt secure string parameters")
 }
