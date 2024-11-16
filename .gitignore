@@ -185,3 +185,5 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 psenv-secrets.yml
 psenv-project.yml
+
+dist/
