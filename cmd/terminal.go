@@ -34,13 +34,13 @@ func terminalEntryPoint(cmd *cobra.Command, args []string) {
 	// load the project config
 	projectConfig, err := config.LoadProjectConfig()
 	if err != nil {
-		fmt.Println("Error loading project config %s\n", err)
+		fmt.Printf("Error loading project config %s\n", err)
 		os.Exit(1)
 	}
 
 	// check if the environment exists in the project config
 	if !projectConfig.HasEnvironment(terminalEnvName) {
-		fmt.Println("Environment %s does not exist in the project configuration.\n", terminalEnvName)
+		fmt.Printf("Environment %s does not exist in the project configuration.\n", terminalEnvName)
 		os.Exit(1)
 	}
 
