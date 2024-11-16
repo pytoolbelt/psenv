@@ -11,8 +11,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ssm/types"
 )
 
+type SSMClient interface {
+	DescribeParameters(ctx context.Context, input *ssm.DescribeParametersInput, opts ...func(*ssm.Options)) (*ssm.DescribeParametersOutput, error)
+	PutParameter(ctx context.Context, input *ssm.PutParameterInput, opts ...func(*ssm.Options)) (*ssm.PutParameterOutput, error)
+	GetParametersByPath(ctx context.Context, input *ssm.GetParametersByPathInput, opts ...func(*ssm.Options)) (*ssm.GetParametersByPathOutput, error)
+	DeleteParameters(ctx context.Context, input *ssm.DeleteParametersInput, opts ...func(*ssm.Options)) (*ssm.DeleteParametersOutput, error)
+}
+
 type ParameterStore struct {
-	Client *ssm.Client
+	Client SSMClient
 }
 
 func New() (*ParameterStore, error) {
