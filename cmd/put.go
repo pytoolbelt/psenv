@@ -35,7 +35,7 @@ func putEntrypoint(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	if envName == "" {
+	if putEnvName == "" {
 		numberOfWorkers = len(secretsConfig.Environments)
 	}
 
@@ -52,8 +52,8 @@ func putEntrypoint(cmd *cobra.Command, args []string) {
 
 	// put the configured paths on the channel. These will be used
 	// by the parameter store to get params by path.
-	if envName != "" {
-		environmentsToPut = append(environmentsToPut, envName)
+	if putEnvName != "" {
+		environmentsToPut = append(environmentsToPut, putEnvName)
 	} else {
 		for env := range secretsConfig.Environments {
 			environmentsToPut = append(environmentsToPut, env)
@@ -182,6 +182,8 @@ func putMainWorker(envChan <-chan string, errorChan chan<- error, wg *sync.WaitG
 	}
 }
 
+var putEnvName string
+
 // putCmd represents the put command
 var putCmd = &cobra.Command{
 	Use:   "put",
@@ -194,4 +196,5 @@ func init() {
 	rootCmd.AddCommand(putCmd)
 	putCmd.Flags().BoolVarP(&overwriteFlag, "overwrite", "o", false, "overwrite existing parameters")
 	putCmd.Flags().StringVarP(&keyIDFlag, "kms-name", "k", "alias/aws/ssm", "KMS key name to use for encryption")
+	putCmd.Flags().StringVarP(&putEnvName, "env", "e", "", "environment to put parameters for")
 }

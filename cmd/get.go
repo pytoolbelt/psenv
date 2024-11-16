@@ -38,7 +38,7 @@ func getEntryPoint(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	if envName == "" {
+	if getEnvName == "" {
 		numberOfWorkers = len(projectConfig.Environments)
 	}
 
@@ -55,8 +55,8 @@ func getEntryPoint(cmd *cobra.Command, args []string) {
 
 	// put the configured paths on the channel. These will be used
 	// by the parameter store to get params by path.
-	if envName != "" {
-		environmentsToGet = append(environmentsToGet, envName)
+	if getEnvName != "" {
+		environmentsToGet = append(environmentsToGet, getEnvName)
 	} else {
 		for _, env := range projectConfig.Environments {
 			environmentsToGet = append(environmentsToGet, env)
@@ -129,6 +129,7 @@ func mainGetWorker(envChan <-chan string, errorChan chan<- error, paramsChan cha
 }
 
 var getCommandDecryptFlag bool
+var getEnvName string
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
@@ -141,4 +142,5 @@ var getCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(getCmd)
 	getCmd.Flags().BoolVarP(&getCommandDecryptFlag, "decrypt", "d", false, "Decrypt secure string parameters")
+	getCmd.Flags().StringVarP(&getEnvName, "env", "e", "", "Environment name to get parameters for")
 }

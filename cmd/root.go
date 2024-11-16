@@ -1,5 +1,5 @@
 /*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
+Copyright © 2024 Jesse Maitland jesse@pytoolbelt.com
 */
 package cmd
 
@@ -8,9 +8,6 @@ import (
 
 	"github.com/spf13/cobra"
 )
-
-// flags for config command
-var envName string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -26,8 +23,4 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
-}
-
-func init() {
-	rootCmd.PersistentFlags().StringVarP(&envName, "env", "e", "", "Environment name")
 }

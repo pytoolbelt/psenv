@@ -27,7 +27,7 @@ func terminalEntryPoint(cmd *cobra.Command, args []string) {
 	validateEnvName()
 	validateCommand(cmd, args)
 
-	fmt.Printf("Starting terminal session for environment %s\n", envName)
+	fmt.Printf("Starting terminal session for environment %s\n", terminalEnvName)
 	fmt.Println("Type 'exit' to exit the terminal session.")
 	fmt.Println("")
 
@@ -39,14 +39,14 @@ func terminalEntryPoint(cmd *cobra.Command, args []string) {
 	}
 
 	// check if the environment exists in the project config
-	if !projectConfig.HasEnvironment(envName) {
-		fmt.Println("Environment %s does not exist in the project configuration.\n", envName)
+	if !projectConfig.HasEnvironment(terminalEnvName) {
+		fmt.Println("Environment %s does not exist in the project configuration.\n", terminalEnvName)
 		os.Exit(1)
 	}
 
 	// load up the environments to fetch. we always fetch base, plus whatever is specified
 	envChan <- "base"
-	envChan <- envName
+	envChan <- terminalEnvName
 
 	// create 2 workers to fetch the parameters
 	for i := 0; i < numberOfWorkers; i++ {
@@ -66,7 +66,7 @@ func terminalEntryPoint(cmd *cobra.Command, args []string) {
 
 	// check for errors
 	for err := range errorChan {
-		fmt.Println("Error getting parameters %s\n", err)
+		fmt.Printf("error getting parameters %s\n", err)
 		os.Exit(1)
 	}
 
@@ -84,19 +84,19 @@ func terminalEntryPoint(cmd *cobra.Command, args []string) {
 
 	term, err := terminal.NewSubShell(envVars, args...)
 	if err != nil {
-		fmt.Println("Error creating terminal %s\n", err)
+		fmt.Printf("error creating terminal %s\n", err)
 		os.Exit(1)
 	}
 
 	err = term.Run()
 	if err != nil {
-		fmt.Println("Error starting terminal %s\n", err)
+		fmt.Printf("error starting terminal %s\n", err)
 		os.Exit(1)
 	}
 }
 
 func validateEnvName() {
-	if envName == "" {
+	if terminalEnvName == "" {
 		fmt.Println("Please specify an environment name with the --env flag to start a terminal session.")
 		os.Exit(1)
 	}
@@ -131,11 +131,14 @@ var execCmd = &cobra.Command{
 }
 
 var NoDecryptFlag bool = false
+var terminalEnvName string
 
 func init() {
 	rootCmd.AddCommand(terminalCmd)
 	terminalCmd.Flags().BoolVar(&NoDecryptFlag, "no-decrypt", true, "Do not decrypt secure string parameters")
+	terminalCmd.Flags().StringVarP(&terminalEnvName, "env", "e", "", "The environment to start a terminal session with")
 
 	rootCmd.AddCommand(execCmd)
 	execCmd.Flags().BoolVar(&NoDecryptFlag, "no-decrypt", true, "Do not decrypt secure string parameters")
+	execCmd.Flags().StringVarP(&terminalEnvName, "env", "e", "", "The environment to start a terminal session with")
 }

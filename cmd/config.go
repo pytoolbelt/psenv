@@ -10,10 +10,6 @@ import (
 	"os"
 )
 
-var newProjectFlag bool
-var newSecretsFlag bool
-var printFlag bool
-
 func configEntrypoint(cmd *cobra.Command, args []string) {
 	validateConfigFlags()
 
@@ -37,16 +33,20 @@ func configEntrypoint(cmd *cobra.Command, args []string) {
 		os.Exit(0)
 	}
 
-	//if newSecretsFlag {
-	//	_, err := config.CreateNewSecretsConfigFile()
-	//	if err != nil {
-	//		fmt.Println(err)
-	//		os.Exit(1)
-	//	}
-	//	fmt.Println("Created new secrets file psenv-secrets.yml")
-	//	os.Exit(0)
-	//}
+	if newSecretsFlag {
+		_, err := config.CreateNewSecretsConfigFile()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		fmt.Println("Created new secrets file psenv-secrets.yml")
+		os.Exit(0)
+	}
 }
+
+var newProjectFlag bool
+var newSecretsFlag bool
+var printFlag bool
 
 func validateConfigFlags() {
 	if newProjectFlag && printFlag || newSecretsFlag && printFlag || newProjectFlag && newSecretsFlag {
