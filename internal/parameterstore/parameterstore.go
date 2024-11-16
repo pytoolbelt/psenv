@@ -55,37 +55,37 @@ func BuildDeleteParamsInput(names []string) *ssm.DeleteParametersInput {
 	}
 }
 
-//func (p *ParamStore) BuildDescribeParametersInput() *ssm.DescribeParametersInput {
-//	return &ssm.DescribeParametersInput{
-//		ParameterFilters: []types.ParameterStringFilter{
-//			{
-//				Key:    aws.String("Name"),
-//				Option: aws.String("BeginsWith"),
-//				Values: []string{p.SSMPath},
-//			},
-//		},
-//	}
-//}
-//
-//func (p *ParamStore) DescribeParameters() ([]string, error) {
-//
-//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//	defer cancel()
-//
-//	var names []string
-//
-//	input := p.BuildDescribeParametersInput()
-//
-//	result, err := p.SSMClient.DescribeParameters(ctx, input)
-//	if err != nil {
-//		return names, fmt.Errorf("Error describing parameters: %s", err)
-//	}
-//	for _, param := range result.Parameters {
-//		names = append(names, strings.TrimPrefix(*param.Name, p.SSMPath+"/"))
-//	}
-//
-//	return names, nil
-//}
+func BuildDescribeParametersInput(paths ...string) *ssm.DescribeParametersInput {
+	return &ssm.DescribeParametersInput{
+		ParameterFilters: []types.ParameterStringFilter{
+			{
+				Key:    aws.String("Name"),
+				Option: aws.String("BeginsWith"),
+				Values: paths,
+			},
+		},
+	}
+}
+
+func (p *ParameterStore) DescribeParameters(paths ...string) ([]string, error) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var names []string
+
+	input := BuildDescribeParametersInput(paths...)
+
+	result, err := p.Client.DescribeParameters(ctx, input)
+	if err != nil {
+		return names, fmt.Errorf("error describing parameters: %s", err)
+	}
+	for _, param := range result.Parameters {
+		names = append(names, *param.Name)
+	}
+
+	return names, nil
+}
 
 func (p *ParameterStore) PutParameters(params map[string]string, keyId string, overwrite bool) error {
 

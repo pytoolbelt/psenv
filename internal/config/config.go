@@ -51,6 +51,25 @@ func (c *ProjectConfig) HasEnvironment(env string) bool {
 	return slices.Contains(c.Environments, env)
 }
 
+func (c *ProjectConfig) Save() error {
+	data, err := yaml.Marshal(c)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(ProjectConfigFile, data, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *ProjectConfig) RemoveEnvironment(env string) {
+	i := slices.Index(c.Environments, env)
+	c.Environments = slices.Delete(c.Environments, i, i+1)
+}
+
 // *************** Secrets Config ***************
 
 type SecretsConfig struct {

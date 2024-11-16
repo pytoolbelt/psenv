@@ -1,0 +1,1 @@
+1. Make default value from project config for the --env flag in case one is not provided
