@@ -39,10 +39,9 @@ changelog:
 
 
 brews:
-  -
-    name: pytoolbelt
+  - name: pytoolbelt
     homepage: https://github.com/pytoolbelt/psenv
-    tap:
+    repository:
       owner: pytoolbelt
       name: homebrew-awstools
     commit_author:
