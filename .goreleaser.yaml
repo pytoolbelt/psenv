@@ -39,7 +39,7 @@ changelog:
 
 
 brews:
-  - name: pytoolbelt
+  - name: psenv
     homepage: https://github.com/pytoolbelt/psenv
     repository:
       owner: pytoolbelt
